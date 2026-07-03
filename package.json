@@ -1,0 +1,10 @@
+{
+  "name": "nexly-demo-portfolio-v2",
+  "private": true,
+  "scripts": {
+    "install:frontend": "npm --prefix webapp/frontend install",
+    "build": "npm --prefix webapp/frontend run build",
+    "dev": "npm --prefix webapp/frontend run dev",
+    "preview": "npm --prefix webapp/frontend run preview"
+  }
+}
