@@ -1,5 +1,5 @@
 {
-  "name": "nexly-demo-portfolio-v2",
+  "name": "nextly-workflow-demo",
   "private": true,
   "scripts": {
     "install:frontend": "npm --prefix webapp/frontend install",
