@@ -1,6 +1,6 @@
 # Nextly 3.0 · Local-first Architecture & Delivery Baseline
 
-**Status:** M0 backend scaffold committed; local runtime verification pending  
+**Status:** M0 backend scaffold and CI smoke tests passed; local Windows verification and backup/restore remain pending  
 **Base branch:** nextly-workflow-refresh  
 **Working branch:** nextly-3.0-local-first  
 **Architecture decision:** Local-first, single-user, local API + SQLite + local file storage
@@ -90,25 +90,31 @@ After a Version is confirmed, normal update endpoints must reject changes to its
 - Alembic initial migration.
 - Project create / list / read / update / archive endpoints.
 - File upload / list / download endpoints with SHA-256 metadata and a 100 MB upload limit.
+- Filename normalization and storage-path containment checks.
 - Vite proxy from /api to 127.0.0.1:8000.
-- Root scripts for backend installation, API startup and database migration.
-- README setup instructions.
+- Root scripts for backend installation, API startup, database migration and backend tests.
+- GitHub Actions checks for backend and frontend.
 
-### Not yet verified
+### CI verification
 
-This branch has not yet been installed or run in a local environment. No build, migration, API integration or upload test is claimed as passed.
+GitHub Actions run for commit ccfa4a571921d5d2098e5c6afb1be2c087fc94dd completed successfully:
 
-Before M0 is accepted, run:
+- Backend editable package installation passed.
+- Alembic initial migration passed in an isolated test data directory.
+- Four API smoke tests passed: health, Project CRUD/archive, file upload/list/download/path sanitization, and persistence across application restart.
+- React + Vite production build passed.
 
-1. Install backend dependencies.
-2. Run Alembic upgrade against a fresh data directory.
-3. Start the API and verify /api/health.
-4. Create, list, update and archive a Project.
-5. Upload, list and download a real file; verify the stored SHA-256.
-6. Verify the 100 MB limit and filename/path traversal handling.
-7. Restart the API and verify records and files persist.
-8. Verify the frontend still builds.
-9. Add backup and restore using SQLite's online backup API and a coordinated storage archive.
+Run: https://github.com/yfy1115955678-design/Nextly/actions/runs/45932425018
+
+### Remaining M0 work
+
+- Run the setup on the user's Windows machine and verify the local data directory.
+- Implement SQLite online backup plus coordinated storage backup and restore.
+- Add frontend Project CRUD and replace the hard-coded project switcher.
+- Add an explicit file-size limit test and backup/restore integration tests.
+- Keep the 2.0 demo workflow available until the 3.0 product-definition flow replaces it.
+
+M0 is not considered fully accepted until local Windows verification, backup/restore and frontend Project CRUD are complete.
 
 ## 5. M1 scope: product-definition vertical slice
 
@@ -174,7 +180,7 @@ All write operations validate project ownership and version consistency in the s
 Create and activate a Python 3.11+ virtual environment, then install:
 
 ~~~bash
-python -m pip install -e ./backend
+python -m pip install -e ./backend[dev]
 npm --prefix webapp/frontend install
 ~~~
 
@@ -189,6 +195,12 @@ Start the API and frontend in separate terminals:
 ~~~bash
 npm run dev:backend
 npm run dev
+~~~
+
+Run backend tests:
+
+~~~bash
+npm run test:backend
 ~~~
 
 The API binds to 127.0.0.1:8000. Vite serves the UI on 127.0.0.1:5173 and proxies /api requests to the API.
