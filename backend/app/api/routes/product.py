@@ -49,6 +49,11 @@ def update_concept(concept_id: str, payload: ConceptUpdate, db: Session = Depend
     return product_service.update_concept(db, concept_id, payload)
 
 
+@router.get("/concepts/{concept_id}/variants")
+def list_variants(concept_id: str, db: Session = Depends(get_db)):
+    return product_service.list_variants(db, concept_id)
+
+
 @router.post(
     "/concepts/{concept_id}/variants",
     response_model=VariantRead,
