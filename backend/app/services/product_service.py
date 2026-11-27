@@ -748,3 +748,40 @@ def get_project_state(db: Session, project_id: str) -> dict:
         "concepts": concept_details,
         "recent_decisions": recent_decisions,
     })
+
+
+
+def add_product_asset(db: Session, version_id: str, payload) -> dict:
+    version = _require_draft(db, version_id)
+    variant = _require_variant(db, version.variant_id)
+    concept = _require_concept(db, variant.concept_id)
+    file_asset = db.get(FileAsset, payload.file_id)
+    if file_asset is None or file_asset.project_id != concept.project_id:
+        raise HTTPException(
+            status_code=404,
+            detail="Source file was not found in this Project.",
+        )
+
+    asset = ProductAsset(
+        id=_id(),
+        version_id=version_id,
+        file_id=payload.file_id,
+        asset_role=payload.asset_role,
+        caption=payload.caption,
+        sort_order=payload.sort_order,
+    )
+    db.add(asset)
+    version.updated_at = _now()
+    db.commit()
+    db.refresh(asset)
+    return jsonable_encoder(asset)
+
+
+def remove_product_asset(db: Session, version_id: str, asset_id: str) -> dict:
+    _require_draft(db, version_id)
+    asset = db.get(ProductAsset, asset_id)
+    if asset is None or asset.version_id != version_id:
+        raise HTTPException(status_code=404, detail="Product asset not found.")
+    db.delete(asset)
+    db.commit()
+    return {"id": asset_id, "deleted": True}
