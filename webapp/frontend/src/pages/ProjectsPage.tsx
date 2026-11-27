@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { PageHeader, StatusBadge } from '../components/PagePrimitives'
 import { archiveProject, createProject, listProjects, updateProject, type ProjectInput, type ProjectRecord } from '../lib/api'
 
@@ -20,6 +21,7 @@ function formatDate(value: string) {
 }
 
 export default function ProjectsPage() {
+  const navigate = useNavigate()
   const [projects, setProjects] = useState<ProjectRecord[]>([])
   const [form, setForm] = useState<ProjectInput>(emptyForm)
   const [editForm, setEditForm] = useState<ProjectInput>(emptyForm)
@@ -137,7 +139,7 @@ export default function ProjectsPage() {
       <PageHeader
         step="NEXTLY 3.0 · WORKSPACE"
         title="项目管理"
-        description="创建和维护持久化项目记录。产品方案、版本与研究内容将在后续模块关联到具体项目。"
+        description="管理本地项目，并从项目进入产品概念、方案对比与版本化产品定义工作区。"
         actions={<StatusBadge tone="success">本地数据库</StatusBadge>}
       />
 
@@ -199,6 +201,7 @@ export default function ProjectsPage() {
                       <div className="project-actions">
                         {project.status !== 'archived' ? (
                           <>
+                            <button className="text-button" onClick={() => navigate('/projects/' + project.id + '/product-definition')}>产品定义</button>
                             <button className="text-button" disabled={saving} onClick={() => beginEdit(project)}>编辑</button>
                             <button className="text-button" disabled={saving} onClick={() => void toggleStatus(project)}>{project.status === 'paused' ? '恢复' : '暂停'}</button>
                             <button className="text-button danger-text" disabled={saving} onClick={() => void handleArchive(project)}>归档</button>
