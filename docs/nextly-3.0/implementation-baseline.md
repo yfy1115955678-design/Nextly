@@ -218,7 +218,7 @@ The API binds to 127.0.0.1:8000. Vite serves the UI on 127.0.0.1:5173 and proxie
 
 The versioned Product Definition vertical slice is implemented. It includes Concept / Variant / Version, structured product-definition sections, file-to-Version associations, immutable confirmed snapshots, Draft cloning, version comparison and workbook export.
 
-See [m1-product-definition.md](./m1-product-definition.md) for the current domain model, API contract, lifecycle and acceptance scope.
+See [m1-product-definition.md](./m1-product-definition.md) for the current domain model, API contract, lifecycle and acceptance scope. Use [m1-local-acceptance.md](./m1-local-acceptance.md) to verify the branch on Windows.
 
 Latest CI run: https://github.com/yfy1115955678-design/Nextly/actions/runs/45947537304
 
