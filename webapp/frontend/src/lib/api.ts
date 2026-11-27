@@ -17,6 +17,18 @@ export interface ProjectInput {
   description?: string
 }
 
+export interface ProjectFileRecord {
+  id: string
+  project_id: string | null
+  original_name: string
+  mime_type: string | null
+  extension: string | null
+  size_bytes: number
+  sha256: string | null
+  file_kind: string
+  created_at: string
+}
+
 export interface BackupRecord {
   id: string
   file_name: string
@@ -76,6 +88,17 @@ export function updateProject(projectId: string, input: Partial<ProjectInput> & 
 
 export function archiveProject(projectId: string) {
   return request<ProjectRecord>('/projects/' + projectId, { method: 'DELETE' })
+}
+
+export function listProjectFiles(projectId: string) {
+  return request<ProjectFileRecord[]>('/files?project_id=' + encodeURIComponent(projectId))
+}
+
+export function uploadProjectFile(projectId: string, file: File) {
+  const body = new FormData()
+  body.append('project_id', projectId)
+  body.append('file', file)
+  return request<ProjectFileRecord>('/files/upload', { method: 'POST', body })
 }
 
 export function listBackups() {
