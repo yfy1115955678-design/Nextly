@@ -15,6 +15,7 @@ from app.schemas.product import (
     DevelopmentIssueWrite,
     ExperienceFlowWrite,
     PersonaWrite,
+    ProductAssetWrite,
     ProductDefinitionWrite,
     ProductRiskWrite,
     QualityStandardWrite,
@@ -130,6 +131,16 @@ def save_risks(version_id: str, payload: list[ProductRiskWrite], db: Session = D
 @router.post("/versions/{version_id}/confirm")
 def confirm_version(version_id: str, payload: ConfirmVersionInput, db: Session = Depends(get_db)):
     return product_service.confirm_version(db, version_id, payload)
+
+
+@router.post("/versions/{version_id}/assets", status_code=status.HTTP_201_CREATED)
+def add_product_asset(version_id: str, payload: ProductAssetWrite, db: Session = Depends(get_db)):
+    return product_service.add_product_asset(db, version_id, payload)
+
+
+@router.delete("/versions/{version_id}/assets/{asset_id}")
+def remove_product_asset(version_id: str, asset_id: str, db: Session = Depends(get_db)):
+    return product_service.remove_product_asset(db, version_id, asset_id)
 
 
 @router.get("/versions/{version_id}/diff")
