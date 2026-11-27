@@ -220,6 +220,6 @@ The versioned Product Definition vertical slice is implemented. It includes Conc
 
 See [m1-product-definition.md](./m1-product-definition.md) for the current domain model, API contract, lifecycle and acceptance scope. Use [m1-local-acceptance.md](./m1-local-acceptance.md) to verify the branch on Windows.
 
-Latest CI run: https://github.com/yfy1115955678-design/Nextly/actions/runs/45947537304
+Latest CI run: https://github.com/yfy1115955678-design/Nextly/actions/runs/45947779357
 
 The remaining acceptance step is local Windows verification. No production deployment or merge to the default branch has been performed.
