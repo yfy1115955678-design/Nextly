@@ -30,8 +30,7 @@ def test_project_crud_and_archive(client: TestClient):
         },
     )
     assert created.status_code == 201
-    project = created.json()
-    project_id = project["id"]
+    project_id = created.json()["id"]
 
     fetched = client.get("/api/projects/" + project_id)
     assert fetched.status_code == 200
@@ -80,13 +79,36 @@ def test_file_upload_list_download_and_path_sanitization(client: TestClient):
     assert downloaded.content == content
 
 
-def test_project_and_file_metadata_survive_app_restart(client: TestClient):
-    created = client.post("/api/projects", json={"name": "Persistence Test"})
-    assert created.status_code == 201
-    project_id = created.json()["id"]
+def test_project_and_file_metadata_survive_app_restart():
+    with TestClient(app) as first_client:
+        created = first_client.post(
+            "/api/projects",
+            json={"name": "Persistence Test"},
+        )
+        assert created.status_code == 201
+        project_id = created.json()["id"]
 
-    # A second TestClient context reuses the same local database and file store.
+        content = b"source,value\nmarket,stable\n"
+        uploaded = first_client.post(
+            "/api/files/upload",
+            data={"project_id": project_id},
+            files={"file": ("persistence.csv", content, "text/csv")},
+        )
+        assert uploaded.status_code == 201
+        file_id = uploaded.json()["id"]
+
     with TestClient(app) as second_client:
         fetched = second_client.get("/api/projects/" + project_id)
         assert fetched.status_code == 200
         assert fetched.json()["name"] == "Persistence Test"
+
+        files = second_client.get(
+            "/api/files",
+            params={"project_id": project_id},
+        )
+        assert files.status_code == 200
+        assert any(item["id"] == file_id for item in files.json())
+
+        downloaded = second_client.get("/api/files/" + file_id + "/download")
+        assert downloaded.status_code == 200
+        assert downloaded.content == content
