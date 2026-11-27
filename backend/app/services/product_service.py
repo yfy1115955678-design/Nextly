@@ -143,6 +143,17 @@ def update_concept(db: Session, concept_id: str, payload) -> ProductConcept:
     return concept
 
 
+def list_variants(db: Session, concept_id: str) -> list[ProductVariant]:
+    _require_concept(db, concept_id)
+    statement = (
+        select(ProductVariant)
+        .where(ProductVariant.concept_id == concept_id)
+        .where(ProductVariant.status != "archived")
+        .order_by(ProductVariant.sort_order, ProductVariant.created_at)
+    )
+    return list(db.scalars(statement).all())
+
+
 def create_variant(db: Session, concept_id: str, payload) -> ProductVariant:
     _require_concept(db, concept_id)
     variant = ProductVariant(
