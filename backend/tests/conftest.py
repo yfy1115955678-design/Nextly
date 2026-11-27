@@ -30,6 +30,7 @@ def isolated_local_data(monkeypatch):
 
     shutil.rmtree(TEST_DATA_DIR, ignore_errors=True)
     TEST_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    settings.database_dir.mkdir(parents=True, exist_ok=True)
 
     test_engine = create_engine(
         settings.database_url,
