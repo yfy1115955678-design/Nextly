@@ -40,6 +40,20 @@ class VariantCreate(BaseModel):
     sort_order: int = 0
 
 
+class VariantRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    concept_id: str
+    code: str | None
+    name: str
+    description: str
+    sort_order: int
+    status: str
+    created_at: datetime
+    updated_at: datetime
+
+
 class VersionCreate(BaseModel):
     change_summary: str = Field(default="", max_length=5000)
 
