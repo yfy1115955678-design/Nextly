@@ -8,8 +8,6 @@ Nextly 是一个用于作品集展示的前端功能原型，演示 AI、人工�
 
 **机会发现 → 市场研究 → 产品定义 → 落地验证 → 评审与决策**
 
-每一页只回答一个核心问题：
-
 | 阶段 | 核心问题 | 主要产出 |
 |---|---|---|
 | 机会发现 | 哪个方向值得研究？ | 3 个候选机会及最大不确定性 |
@@ -20,7 +18,7 @@ Nextly 是一个用于作品集展示的前端功能原型，演示 AI、人工�
 
 ## Demo 的核心故事
 
-当前项目为 `AquaPure S1` 宠物饮水机。
+当前项目为 AquaPure S1 宠物饮水机。
 
 1. 市场研究提出“整机洗碗机安全”的易清洁需求。
 2. 落地验证发现泵体与 PCB 无法进入洗碗机。
@@ -34,13 +32,13 @@ Nextly 是一个用于作品集展示的前端功能原型，演示 AI、人工�
 
 ## 关键设计
 
-- **共享 Project State**：各页面读取同一份版本、冲突和决定状态。
-- **Human Gate**：关键修改必须经过人工确认。
-- **版本 Diff**：明确展示产品定义 v1 → v2 的变化。
-- **问题分级**：区分阻塞项、推进条件和普通提醒。
-- **Decision Log**：记录决定、依据、时间和影响范围。
-- **局部更新演示**：上传 BSR、报价或验证报告后，模拟识别受影响模块。
-- **上下文 AI 助手**：根据当前页面和项目状态提供下一步，而不是重复固定话术。
+- 共享 Project State：各页面读取同一份版本、冲突和决定状态。
+- Human Gate：关键修改必须经过人工确认。
+- 版本 Diff：明确展示产品定义 v1 → v2 的变化。
+- 问题分级：区分阻塞项、推进条件和普通提醒。
+- Decision Log：记录决定、依据、时间和影响范围。
+- 局部更新演示：上传 BSR、报价或验证报告后，模拟识别受影响模块。
+- 上下文 AI 助手：根据当前页面和项目状态提供下一步，而不是重复固定话术。
 
 ## Demo 边界
 
@@ -50,37 +48,90 @@ Nextly 是一个用于作品集展示的前端功能原型，演示 AI、人工�
 - 不调用真实大模型；
 - 不上传或传输用户文件；
 - 文件入口仅根据文件名模拟资料识别和影响分析；
-- 项目状态保存在浏览器 `localStorage`；
+- 项目状态保存在浏览器 localStorage；
 - “重置演示”可恢复初始冲突状态。
 
-## 本地运行
+## 本地运行 2.0 Demo
 
-```bash
+\`\`\`bash
 npm --prefix webapp/frontend install
 npm --prefix webapp/frontend run dev
-```
+\`\`\`
 
-生产构建：
+## Nextly 3.0 · Local-first 开发中
 
-```bash
-npm --prefix webapp/frontend run build
-```
+3.0 从 nextly-workflow-refresh 分支继续演进，当前工作分支为 nextly-3.0-local-first。
+
+目标架构：
+
+- 前端：React + Vite，保留现有工作台交互；
+- 本地 API：FastAPI；
+- 数据库：SQLite；
+- ORM / Migration：SQLAlchemy 2.0 + Alembic；
+- 文件：本地文件系统，数据库只保存相对路径和元数据；
+- 运行方式：前端通过 Vite /api 代理访问本机 127.0.0.1:8000。
+
+### 后端安装
+
+建议使用 Python 3.11 或更高版本。
+
+\`\`\`bash
+python -m venv .venv
+# Windows PowerShell
+.venv\\Scripts\\Activate.ps1
+# macOS / Linux
+source .venv/bin/activate
+python -m pip install -e ./backend
+\`\`\`
+
+### 初始化数据库
+
+\`\`\`bash
+npm run db:upgrade
+\`\`\`
+
+### 启动服务
+
+终端 A：
+
+\`\`\`bash
+npm run dev:backend
+\`\`\`
+
+终端 B：
+
+\`\`\`bash
+npm --prefix webapp/frontend install
+npm run dev
+\`\`\`
+
+后端健康检查：http://127.0.0.1:8000/api/health
+
+API 文档：http://127.0.0.1:8000/docs
+
+### 当前 M0 范围
+
+- FastAPI 本地服务骨架；
+- SQLite 连接、WAL 和外键约束；
+- Alembic 初始迁移；
+- Project 创建、读取、更新、归档；
+- 文件上传、元数据保存、下载；
+- Vite /api 代理。
+
+当前 M0 尚未完成前端 Project CRUD 接入、自动化测试、备份恢复 UI，也尚未实现 Concept / Variant / Version。原 2.0 页面仍使用原有演示状态，后续 M1 再逐步替换。
 
 ## 技术栈
 
+### 2.0 Demo
 - React 18
 - TypeScript
 - React Router
 - Vite
 - CSS
 
-## 项目结构
-
-```text
-webapp/frontend/src/
-├── components/        # 工作台框架、AI 助手与通用组件
-├── lib/               # 共享项目状态与本地持久化
-├── pages/             # 五阶段页面、项目总览与运行记录
-├── App.tsx
-└── index.css
-```
+### 3.0 Local-first
+- FastAPI
+- SQLAlchemy 2.0
+- Alembic
+- SQLite
+- Python 3.11+
