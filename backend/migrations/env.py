@@ -12,6 +12,8 @@ from app.core.config import settings
 from app.db.base import Base
 from app import models  # noqa: F401
 
+settings.database_dir.mkdir(parents=True, exist_ok=True)
+
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
