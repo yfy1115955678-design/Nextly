@@ -50,7 +50,9 @@ export default function AppShell() {
   const navigate = useNavigate()
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
-  const isWorkspacePage = location.pathname === '/projects' || location.pathname.startsWith('/settings/')
+  const isProductWorkspace = location.pathname.startsWith('/projects/') || location.pathname.startsWith('/concepts/') || location.pathname.startsWith('/variants/') || location.pathname.startsWith('/versions/')
+  const isWorkspacePage = location.pathname === '/projects' || location.pathname.startsWith('/settings/') || isProductWorkspace
+  const dynamicPageLabel = location.pathname.startsWith('/projects/') ? '产品概念' : location.pathname.startsWith('/concepts/') ? '方案管理' : location.pathname.startsWith('/variants/') ? '版本历史' : location.pathname.startsWith('/versions/') ? '产品定义' : '项目'
 
   useEffect(() => {
     const openAssistant = () => setAssistantOpen(true)
@@ -66,9 +68,9 @@ export default function AppShell() {
           <span><strong>Nextly</strong><small>产品开发工作台</small></span>
         </NavLink>
 
-        <div className="project-switcher" aria-label="当前演示案例 AquaPure S1">
-          <span className="project-avatar">AP</span>
-          <span className="project-meta"><strong>AquaPure S1</strong><small>演示案例 · US · 宠物饮水机</small></span>
+        <div className="project-switcher" aria-label={isWorkspacePage ? 'Nextly 本地项目库' : '当前演示案例 AquaPure S1'}>
+          <span className="project-avatar">{isWorkspacePage ? 'NX' : 'AP'}</span>
+          <span className="project-meta"><strong>{isWorkspacePage ? '本地项目库' : 'AquaPure S1'}</strong><small>{isWorkspacePage ? 'Nextly 3.0 · Local-first' : '演示案例 · US · 宠物饮水机'}</small></span>
           <Symbol name="chevron" />
         </div>
 
@@ -130,7 +132,7 @@ export default function AppShell() {
 
       <div className="workspace">
         <header className="topbar">
-          <div className="breadcrumb"><span>{isWorkspacePage ? 'Nextly' : 'AquaPure S1'}</span><b>→</b><strong>{pageLabels[location.pathname] ?? '项目'}</strong></div>
+          <div className="breadcrumb"><span>{isWorkspacePage ? 'Nextly' : 'AquaPure S1'}</span><b>→</b><strong>{pageLabels[location.pathname] ?? dynamicPageLabel}</strong></div>
           <div className="topbar-actions">
             <span className="demo-pill"><i />{isWorkspacePage ? '3.0 Local-first' : '2.0 Demo · Mock data'}</span>
             <span className="avatar-button" aria-hidden="true">FY</span>
