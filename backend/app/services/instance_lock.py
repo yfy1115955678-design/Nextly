@@ -1,5 +1,5 @@
+import os
 from contextlib import contextmanager
-from pathlib import Path
 from typing import Iterator
 
 from app.core.config import settings
@@ -19,7 +19,7 @@ def acquire_instance_lock() -> Iterator[None]:
             handle.flush()
         handle.seek(0)
 
-        if __import__("os").name == "nt":
+        if os.name == "nt":
             import msvcrt
 
             try:
@@ -42,7 +42,7 @@ def acquire_instance_lock() -> Iterator[None]:
             yield
         finally:
             handle.seek(0)
-            if __import__("os").name == "nt":
+            if os.name == "nt":
                 import msvcrt
 
                 msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
