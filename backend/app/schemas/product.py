@@ -223,3 +223,10 @@ class ConfirmVersionInput(BaseModel):
     rationale: str = Field(default="", max_length=10000)
     impact: str = Field(default="", max_length=10000)
     conditions: str = Field(default="", max_length=10000)
+
+
+class ProductAssetWrite(BaseModel):
+    file_id: str = Field(min_length=1, max_length=36)
+    asset_role: str = Field(default="reference", min_length=1, max_length=80)
+    caption: str = Field(default="", max_length=5000)
+    sort_order: int = 0
