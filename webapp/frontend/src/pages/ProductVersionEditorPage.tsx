@@ -314,6 +314,7 @@ export default function ProductVersionEditorPage() {
         actions={
           <>
             <StatusBadge tone={detail?.version.status === 'draft' ? 'warning' : detail?.version.status === 'confirmed' ? 'success' : 'neutral'}>{detail ? statusLabel(detail.version.status) : '读取中'}</StatusBadge>
+            <a className="secondary-button" href={'/api/versions/' + versionId + '/export'}>导出 Excel</a>
             <button className="secondary-button" onClick={() => navigate('/variants/' + detail?.variant.id)}>版本历史</button>
             {detail?.version.based_on_version_id ? <button className="secondary-button" onClick={() => void handleDiff()}>查看版本差异</button> : null}
             {detail?.version.status === 'draft' ? <button className="primary-button" disabled={saving} onClick={() => void handleConfirm()}>确认版本</button> : null}
