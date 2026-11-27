@@ -333,3 +333,21 @@ export function confirmVersion(versionId: string, input: {
 export function getVersionDiff(versionId: string) {
   return productRequest<Record<string, unknown>>('/versions/' + versionId + '/diff')
 }
+
+export function addProductAsset(versionId: string, input: {
+  file_id: string
+  asset_role: string
+  caption?: string
+  sort_order?: number
+}) {
+  return productRequest<ProductVersionDetail['assets'][number]>('/versions/' + versionId + '/assets', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function removeProductAsset(versionId: string, assetId: string) {
+  return productRequest<{ id: string; deleted: boolean }>('/versions/' + versionId + '/assets/' + assetId, {
+    method: 'DELETE',
+  })
+}
