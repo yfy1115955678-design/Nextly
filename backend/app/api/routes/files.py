@@ -11,7 +11,7 @@ from app.db.session import get_db
 from app.models.file_asset import FileAsset
 from app.models.project import Project
 from app.schemas.file_asset import FileRead
-from app.services.file_storage import classify_file, persist_upload
+from app.services.file_storage import classify_file, normalize_filename, persist_upload
 
 router = APIRouter(prefix="/files", tags=["files"])
 
@@ -26,17 +26,18 @@ async def upload_file(
     if project is None or project.status == "archived":
         raise HTTPException(status_code=404, detail="Project not found")
 
+    original_name = normalize_filename(file.filename)
     relative_path, sha256, size, file_id = await persist_upload(project_id, file)
     asset = FileAsset(
         id=file_id,
         project_id=project_id,
-        original_name=Path(file.filename or "upload.bin").name,
+        original_name=original_name,
         stored_rel_path=relative_path,
         mime_type=file.content_type,
-        extension=Path(file.filename or "").suffix.lower(),
+        extension=Path(original_name).suffix.lower(),
         size_bytes=size,
         sha256=sha256,
-        file_kind=classify_file(file.filename or ""),
+        file_kind=classify_file(original_name),
         created_at=datetime.now(timezone.utc),
     )
 
