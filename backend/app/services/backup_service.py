@@ -25,7 +25,7 @@ def _sha256_file(path: Path) -> str:
 
 
 def _safe_archive_name(name: str) -> PurePosixPath:
-    if "\\\\" in name or "\\x00" in name:
+    if "\\" in name or "\x00" in name:
         raise BackupError("Backup contains an invalid file path")
     path = PurePosixPath(name)
     if path.is_absolute() or any(part in {"", ".", ".."} for part in path.parts):
@@ -69,7 +69,7 @@ def inspect_backup(archive_path: Path, verify_database: bool = True) -> dict:
             expected_names = {"database/nextly.sqlite", "manifest.json"}
             for item in expected_storage:
                 relative = _safe_archive_name(item["path"])
-                if not relative.parts or relative.parts[0] != "storage":
+                if len(relative.parts) < 2 or relative.parts[0] != "storage":
                     raise BackupError("Backup storage path is invalid")
                 expected_names.add(item["path"])
 
