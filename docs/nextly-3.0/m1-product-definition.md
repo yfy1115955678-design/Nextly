@@ -1,6 +1,6 @@
 # Nextly 3.0 · M1 Product Definition Vertical Slice
 
-**Status:** Design baseline  
+**Status:** Implemented on branch; local desktop acceptance pending  
 **Branch:** nextly-3.0-local-first  
 **Scope:** Concept → Variant → Version → Product Definition → Requirements → Experience → BOM → Decision
 
@@ -92,6 +92,7 @@ A Draft cannot be confirmed until its product basics and at least one requiremen
 | Method | Endpoint | Purpose |
 |---|---|---|
 | GET / POST | /api/projects/{project_id}/concepts | List / create Concepts |
+| GET | /api/concepts/{concept_id}/variants | List Variants under a Concept |
 | GET / PATCH | /api/concepts/{concept_id} | Read / update Concept metadata |
 | POST | /api/concepts/{concept_id}/variants | Create Variant |
 | GET | /api/variants/{variant_id} | Read Variant and its Versions |
@@ -107,6 +108,8 @@ A Draft cannot be confirmed until its product basics and at least one requiremen
 | PUT | /api/versions/{version_id}/risks | Replace risk records |
 | POST | /api/versions/{version_id}/confirm | Confirm Draft and create Decision |
 | GET | /api/versions/{version_id}/diff | Compare with its base Version |
+| POST / DELETE | /api/versions/{version_id}/assets | Link / unlink a Project file to a Version |
+| GET | /api/versions/{version_id}/export | Export a structured product-definition workbook |
 | GET | /api/versions/{version_id}/export | Export a structured product-definition workbook |
 | GET | /api/projects/{project_id}/state | Return aggregated Product State |
 
@@ -141,3 +144,19 @@ All write operations validate the Version state and parent ownership in the serv
 - Automated change-impact analysis across research and product-definition modules.
 
 These are deliberately deferred so M1 can establish stable business entities, version ownership and human confirmation first.
+
+
+## 9. Implementation notes
+
+The M1 vertical slice is implemented in the nextly-3.0-local-first branch.
+
+- Project management links into a real Product Workspace.
+- Concepts can be created under a Project.
+- Variants can be created and compared under a Concept.
+- Version history supports Draft creation, immutable confirmed snapshots and version cloning.
+- The editor exposes sections for product basics, personas, requirements, development issues, experience flows, BOM / supplier quotes, quality / compliance, risks and product assets.
+- Project files can be uploaded and linked to a specific Version. Removing a Version link does not delete the original Project file.
+- A Version can be exported to an .xlsx workbook with separate sheets for the definition, personas, requirements, issues, experience, BOM, supplier quotes, quality, risks and decisions.
+- CI covers the migration, API lifecycle, cloning, cross-Version BOM references, file links and workbook export.
+
+Local acceptance remains necessary for interaction quality, visual layout and the Windows start / backup / restore workflow.
