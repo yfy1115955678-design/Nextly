@@ -43,6 +43,11 @@ def _run_migrations(connection) -> None:
     )
     with context.begin_transaction():
         context.run_migrations()
+    # SQLite DDL may run under SQLAlchemy's autobegun transaction even when
+    # Alembic treats DDL as non-transactional. Commit it before the supplied
+    # connection is reused or closed.
+    if connection.in_transaction():
+        connection.commit()
 
 
 def run_migrations_online() -> None:
