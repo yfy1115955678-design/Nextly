@@ -470,7 +470,9 @@ def replace_risks(db: Session, version_id: str, payloads) -> list:
 
 
 def replace_bom(db: Session, version_id: str, payloads) -> list:
-    _require_draft(db, version_id)
+    version = _require_draft(db, version_id)
+    variant = _require_variant(db, version.variant_id)
+    concept = _require_concept(db, variant.concept_id)
     codes = [payload.item_code for payload in payloads]
     if len(codes) != len(set(codes)):
         raise HTTPException(status_code=422, detail="BOM item codes must be unique within a Version.")
@@ -512,8 +514,11 @@ def replace_bom(db: Session, version_id: str, payloads) -> list:
             source_file_id = quote_values.get("source_file_id")
             if source_file_id:
                 asset = db.get(FileAsset, source_file_id)
-                if asset is None:
-                    raise HTTPException(status_code=422, detail="Supplier quote source file was not found.")
+                if asset is None or asset.project_id != concept.project_id:
+                    raise HTTPException(
+                        status_code=422,
+                        detail="Supplier quote source file must belong to this Project.",
+                    )
             db.add(BomItemQuote(
                 id=_id(),
                 bom_item_id=item.id,
