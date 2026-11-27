@@ -120,6 +120,10 @@ def create_concept(db: Session, project_id: str, payload) -> ProductConcept:
     return concept
 
 
+def get_concept(db: Session, concept_id: str) -> ProductConcept:
+    return _require_concept(db, concept_id)
+
+
 def update_concept(db: Session, concept_id: str, payload) -> ProductConcept:
     concept = _require_concept(db, concept_id)
     updates = payload.model_dump(exclude_unset=True)
