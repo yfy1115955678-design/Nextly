@@ -81,7 +81,7 @@ python -m venv .venv
 .venv\Scripts\Activate.ps1
 # macOS / Linux
 source .venv/bin/activate
-python -m pip install -e ./backend
+python -m pip install -e "./backend[dev]"
 ~~~
 
 ### 初始化数据库
@@ -109,6 +109,12 @@ npm run dev
 
 API 文档：http://127.0.0.1:8000/docs
 
+后端测试：
+
+~~~bash
+npm run test:backend
+~~~
+
 ### 当前 M0 范围
 
 - FastAPI 本地服务骨架；
@@ -116,9 +122,12 @@ API 文档：http://127.0.0.1:8000/docs
 - Alembic 初始迁移；
 - Project 创建、读取、更新、归档；
 - 文件上传、元数据保存、下载；
-- Vite /api 代理。
+- Vite /api 代理；
+- 后端 CI 测试和前端构建检查。
 
-当前 M0 尚未完成前端 Project CRUD 接入、自动化测试、备份恢复 UI，也尚未实现 Concept / Variant / Version。原 2.0 页面仍使用原有演示状态，后续 M1 再逐步替换。
+CI 已通过后端 4 项 API smoke tests 和前端生产构建。Windows 本机运行、备份恢复及前端 Project CRUD 接入仍待完成。原 2.0 页面暂时继续使用演示状态。
+
+完整实施边界见 docs/nextly-3.0/implementation-baseline.md。
 
 ## 技术栈
 
