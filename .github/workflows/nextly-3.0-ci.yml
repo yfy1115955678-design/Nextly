@@ -1,0 +1,36 @@
+name: Nextly 3.0 CI
+
+on:
+  push:
+    branches:
+      - nextly-3.0-local-first
+  pull_request:
+    branches:
+      - nextly-3.0-local-first
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install backend and test dependencies
+        run: python -m pip install -e "./backend[dev]"
+      - name: Run migration and API smoke tests
+        run: python -m pytest backend/tests
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: webapp/frontend/package-lock.json
+      - name: Install frontend dependencies
+        run: npm ci --prefix webapp/frontend
+      - name: Build frontend
+        run: npm --prefix webapp/frontend run build
