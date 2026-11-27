@@ -8,8 +8,15 @@ from fastapi import HTTPException, UploadFile
 from app.core.config import settings
 
 
+def normalize_filename(filename: str | None) -> str:
+    normalized = (filename or "upload.bin").replace("\\", "/").split("/")[-1].strip()
+    if not normalized or normalized in {".", ".."}:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    return normalized
+
+
 def classify_file(filename: str) -> str:
-    suffix = Path(filename).suffix.lower()
+    suffix = Path(normalize_filename(filename)).suffix.lower()
     if suffix in {".xlsx", ".xls", ".csv"}:
         return "research_data"
     if suffix in {".png", ".jpg", ".jpeg", ".webp", ".svg"}:
@@ -22,10 +29,7 @@ def classify_file(filename: str) -> str:
 
 
 async def persist_upload(project_id: str, upload: UploadFile) -> tuple[str, str, int, str]:
-    original_name = Path(upload.filename or "upload.bin").name
-    if not original_name or original_name in {".", ".."}:
-        raise HTTPException(status_code=400, detail="Invalid filename")
-
+    original_name = normalize_filename(upload.filename)
     suffix = Path(original_name).suffix.lower()[:16]
     file_id = str(uuid4())
     relative_path = Path("projects") / project_id / "inbox" / (file_id + suffix)
