@@ -1,10 +1,12 @@
 import os
+import shutil
 import sys
 import tempfile
 from pathlib import Path
 
+import pytest
+
 BACKEND_DIR = Path(__file__).resolve().parents[1]
-REPO_ROOT = BACKEND_DIR.parent
 sys.path.insert(0, str(BACKEND_DIR))
 
 TEST_DATA_DIR = Path(tempfile.mkdtemp(prefix="nextly-test-"))
@@ -14,4 +16,15 @@ from alembic import command
 from alembic.config import Config
 
 alembic_config = Config(str(BACKEND_DIR / "alembic.ini"))
-command.upgrade(alembic_config, "head")
+
+
+@pytest.fixture(autouse=True)
+def isolated_local_data():
+    from app.db.session import engine
+
+    engine.dispose()
+    shutil.rmtree(TEST_DATA_DIR, ignore_errors=True)
+    TEST_DATA_DIR.mkdir(parents=True, exist_ok=True)
+    command.upgrade(alembic_config, "head")
+    yield
+    engine.dispose()
