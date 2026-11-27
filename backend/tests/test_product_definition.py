@@ -1,4 +1,7 @@
+from io import BytesIO
+
 from fastapi.testclient import TestClient
+from openpyxl import load_workbook
 
 from app.main import app
 
@@ -221,6 +224,26 @@ def test_product_definition_version_lifecycle_and_clone():
 
         fill_version(client, version_id)
 
+        variants = client.get(f"/api/concepts/{concept_id}/variants")
+        assert variants.status_code == 200
+        assert len(variants.json()) == 1
+
+        uploaded_asset = client.post(
+            "/api/files/upload",
+            data={"project_id": project_id},
+            files={"file": ("product-overview.png", b"fake-image-data", "image/png")},
+        )
+        assert uploaded_asset.status_code == 201
+        asset_response = client.post(
+            f"/api/versions/{version_id}/assets",
+            json={
+                "file_id": uploaded_asset.json()["id"],
+                "asset_role": "hero",
+                "caption": "Product overview",
+            },
+        )
+        assert asset_response.status_code == 201
+
         details = client.get(f"/api/versions/{version_id}")
         assert details.status_code == 200
         payload = details.json()
@@ -230,6 +253,15 @@ def test_product_definition_version_lifecycle_and_clone():
         assert payload["bom_items"][1]["parent_item_code"] == "SET"
         assert payload["bom_items"][1]["quotes"][0]["supplier_name"] == "Sample Factory"
         assert payload["experience_flows"][0]["steps"][0]["bom_item_codes"] == ["TANK"]
+        assert payload["assets"][0]["asset_role"] == "hero"
+
+        exported = client.get(f"/api/versions/{version_id}/export")
+        assert exported.status_code == 200
+        workbook = load_workbook(BytesIO(exported.content), read_only=True)
+        assert "产品定义" in workbook.sheetnames
+        assert "用户画像" in workbook.sheetnames
+        assert "供应商报价" in workbook.sheetnames
+        workbook.close()
 
         confirmed = client.post(
             f"/api/versions/{version_id}/confirm",
@@ -267,6 +299,7 @@ def test_product_definition_version_lifecycle_and_clone():
         assert len(cloned["requirements"]) == 1
         assert len(cloned["bom_items"]) == 2
         assert len(cloned["experience_flows"][0]["steps"]) == 1
+        assert len(cloned["assets"]) == 1
 
         revised_definition = client.put(
             f"/api/versions/{second_id}/definition",
