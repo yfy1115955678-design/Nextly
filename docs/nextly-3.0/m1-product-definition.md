@@ -59,7 +59,7 @@ This structure follows the existing product-definition workbook's section logic 
 7. Every requirement, persona, development issue, experience flow, BOM item, quality standard, risk and product asset belongs to exactly one Version.
 8. BOM parent-child relationships cannot cross Versions.
 9. An Experience Step may reference only BOM items from the same Version.
-10. Supplier quotes belong to a BOM item and the same Version. A quote is a source fact; a BOM estimate is a planning value.
+10. Supplier quotes belong to a BOM item and the same Version. A quote is a source fact; a BOM estimate is a planning value. Any source file linked to a quote must belong to the same Project.
 11. A Decision is immutable after creation and links to the Version it reviewed.
 12. Product State is an API read model assembled from normalized records; it is not stored as a duplicated JSON blob.
 
