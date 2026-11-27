@@ -14,6 +14,8 @@ const navItems: Array<{ to: string; label: string; icon: SymbolName; question: s
 
 const pageLabels: Record<string, string> = {
   '/': '项目总览',
+  '/projects': '项目管理',
+  '/settings/backups': '数据与备份',
   '/opportunity': '机会发现',
   '/research': '市场研究',
   '/product': '产品定义',
@@ -48,6 +50,7 @@ export default function AppShell() {
   const navigate = useNavigate()
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [moreOpen, setMoreOpen] = useState(false)
+  const isWorkspacePage = location.pathname === '/projects' || location.pathname.startsWith('/settings/')
 
   useEffect(() => {
     const openAssistant = () => setAssistantOpen(true)
@@ -63,15 +66,23 @@ export default function AppShell() {
           <span><strong>Nextly</strong><small>产品开发工作台</small></span>
         </NavLink>
 
-        <div className="project-switcher" aria-label="当前项目 AquaPure S1">
+        <div className="project-switcher" aria-label="当前演示案例 AquaPure S1">
           <span className="project-avatar">AP</span>
-          <span className="project-meta"><strong>AquaPure S1</strong><small>US · 宠物饮水机</small></span>
+          <span className="project-meta"><strong>AquaPure S1</strong><small>演示案例 · US · 宠物饮水机</small></span>
           <Symbol name="chevron" />
         </div>
 
         <nav className="sidebar-nav" aria-label="项目导航">
-          <span className="nav-group-label">项目</span>
-          <NavLink to="/" end className={({ isActive }) => `side-link ${isActive ? 'active' : ''}`}>
+          <span className="nav-group-label">工作空间</span>
+          <NavLink to="/projects" className={({ isActive }) => 'side-link ' + (isActive ? 'active' : '')}>
+            <Symbol name="overview" /><span>项目管理</span>
+          </NavLink>
+          <NavLink to="/settings/backups" className={({ isActive }) => 'side-link ' + (isActive ? 'active' : '')}>
+            <Symbol name="history" /><span>数据与备份</span>
+          </NavLink>
+
+          <span className="nav-group-label">演示流程 · AquaPure S1</span>
+          <NavLink to="/" end className={({ isActive }) => 'side-link ' + (isActive ? 'active' : '')}>
             <Symbol name="overview" /><span>项目总览</span>
           </NavLink>
 
@@ -82,12 +93,12 @@ export default function AppShell() {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={({ isActive }) => `side-link ${isActive ? 'active' : ''}`}
+                className={({ isActive }) => 'side-link ' + (isActive ? 'active' : '')}
                 title={item.question}
               >
                 <Symbol name={item.icon} />
                 <span>{item.label}</span>
-                <i className={`stage-dot ${tone}`} aria-label={stageAriaLabel(tone)} />
+                <i className={'stage-dot ' + tone} aria-label={stageAriaLabel(tone)} />
               </NavLink>
             )
           })}
@@ -96,7 +107,7 @@ export default function AppShell() {
             <span>更多</span><Symbol name="chevron" className={moreOpen ? 'rotate' : ''} />
           </button>
           {moreOpen ? (
-            <NavLink to="/trace" className={({ isActive }) => `side-link sub-link ${isActive ? 'active' : ''}`}>
+            <NavLink to="/trace" className={({ isActive }) => 'side-link sub-link ' + (isActive ? 'active' : '')}>
               <Symbol name="history" /><span>项目记录</span>
             </NavLink>
           ) : null}
@@ -113,15 +124,15 @@ export default function AppShell() {
           >
             <Symbol name="reset" />重置演示
           </button>
-          <span>Portfolio Demo · Mock data</span>
+          <span>Nextly 3.0 · Local-first + 2.0 Demo</span>
         </div>
       </aside>
 
       <div className="workspace">
         <header className="topbar">
-          <div className="breadcrumb"><span>AquaPure S1</span><b>→</b><strong>{pageLabels[location.pathname] ?? '项目'}</strong></div>
+          <div className="breadcrumb"><span>{isWorkspacePage ? 'Nextly' : 'AquaPure S1'}</span><b>→</b><strong>{pageLabels[location.pathname] ?? '项目'}</strong></div>
           <div className="topbar-actions">
-            <span className="demo-pill"><i />AI 协作 Workflow Demo</span>
+            <span className="demo-pill"><i />{isWorkspacePage ? '3.0 Local-first' : '2.0 Demo · Mock data'}</span>
             <span className="avatar-button" aria-hidden="true">FY</span>
           </div>
         </header>
