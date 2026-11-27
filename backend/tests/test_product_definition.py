@@ -408,7 +408,7 @@ def test_product_definition_version_lifecycle_and_clone():
 
 def test_product_definition_validates_bom_hierarchy_and_price_range():
     with TestClient(app) as client:
-        _, _, variant_id = create_project_and_variant(client)
+        project_id, _, variant_id = create_project_and_variant(client)
         version = client.post(
             f"/api/variants/{variant_id}/versions",
             json={},
@@ -441,3 +441,41 @@ def test_product_definition_validates_bom_hierarchy_and_price_range():
             ],
         )
         assert cyclic_bom.status_code == 422
+
+        other_project = client.post(
+            "/api/projects",
+            json={"name": "Unrelated Project"},
+        )
+        assert other_project.status_code == 201
+        other_project_id = other_project.json()["id"]
+        other_file = client.post(
+            "/api/files/upload",
+            data={"project_id": other_project_id},
+            files={"file": ("supplier-quote.pdf", b"quote", "application/pdf")},
+        )
+        assert other_file.status_code == 201
+
+        cross_project_asset = client.post(
+            f"/api/versions/{version_id}/assets",
+            json={"file_id": other_file.json()["id"], "asset_role": "supplier"},
+        )
+        assert cross_project_asset.status_code == 404
+
+        cross_project_quote = client.put(
+            f"/api/versions/{version_id}/bom",
+            json=[
+                {
+                    "item_code": "ITEM-01",
+                    "name": "Test component",
+                    "quantity": 1,
+                    "unit": "pcs",
+                    "quotes": [
+                        {
+                            "supplier_name": "Unrelated supplier",
+                            "source_file_id": other_file.json()["id"],
+                        }
+                    ],
+                }
+            ],
+        )
+        assert cross_project_quote.status_code == 422
