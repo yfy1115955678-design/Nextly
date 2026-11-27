@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { PageHeader, StatusBadge } from '../components/PagePrimitives'
+import { listProjectFiles, uploadProjectFile, type ProjectFileRecord } from '../lib/api'
 import {
+  addProductAsset,
+  removeProductAsset,
   confirmVersion,
   getVersion,
   getVersionDiff,
@@ -24,7 +27,7 @@ import {
   type QualityStandard,
 } from '../lib/productApi'
 
-type TabKey = 'definition' | 'personas' | 'requirements' | 'issues' | 'experience' | 'bom' | 'quality' | 'risks'
+type TabKey = 'definition' | 'personas' | 'requirements' | 'issues' | 'experience' | 'bom' | 'quality' | 'risks' | 'assets'
 
 const tabs: Array<{ key: TabKey; label: string }> = [
   { key: 'definition', label: '基本信息' },
@@ -35,6 +38,7 @@ const tabs: Array<{ key: TabKey; label: string }> = [
   { key: 'bom', label: 'BOM 与报价' },
   { key: 'quality', label: '质量与合规' },
   { key: 'risks', label: '风险管理' },
+  { key: 'assets', label: '产品资料' },
 ]
 
 const emptyDefinition: ProductDefinition = {
@@ -163,6 +167,10 @@ export default function ProductVersionEditorPage() {
   const [bom, setBom] = useState<BomItem[]>([])
   const [quality, setQuality] = useState<QualityStandard[]>([])
   const [risks, setRisks] = useState<ProductRisk[]>([])
+  const [assets, setAssets] = useState<ProductVersionDetail['assets']>([])
+  const [projectFiles, setProjectFiles] = useState<ProjectFileRecord[]>([])
+  const [assetRole, setAssetRole] = useState('reference')
+  const [assetCaption, setAssetCaption] = useState('')
   const [activeTab, setActiveTab] = useState<TabKey>('definition')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -177,7 +185,10 @@ export default function ProductVersionEditorPage() {
     setLoading(true)
     try {
       const result = await getVersion(versionId)
+      const files = await listProjectFiles(result.project.id)
       setDetail(result)
+      setProjectFiles(files)
+      setAssets(result.assets)
       setDefinition({ ...emptyDefinition, ...(result.definition ?? {}) })
       setPersonas(result.personas.map(({ id, ...item }) => item))
       setRequirements(result.requirements.map(({ id, ...item }) => item))
@@ -217,6 +228,44 @@ export default function ProductVersionEditorPage() {
       setNotice(label + '已保存。')
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : label + '保存失败')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleAssetUpload = async (file?: File) => {
+    if (!file || !detail || readOnly) return
+    setSaving(true)
+    setError('')
+    setNotice('')
+    try {
+      const uploaded = await uploadProjectFile(detail.project.id, file)
+      await addProductAsset(versionId, {
+        file_id: uploaded.id,
+        asset_role: assetRole,
+        caption: assetCaption.trim() || uploaded.original_name,
+        sort_order: assets.length,
+      })
+      setAssetCaption('')
+      setNotice('文件已上传并关联到当前产品版本。')
+      await refresh()
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : '文件上传失败')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleAssetRemove = async (assetId: string) => {
+    if (!window.confirm('从当前版本移除这份资料？项目文件本身不会被删除。')) return
+    setSaving(true)
+    setError('')
+    try {
+      await removeProductAsset(versionId, assetId)
+      setAssets(assets.filter((asset) => asset.id !== assetId))
+      setNotice('资料关联已移除，原文件仍保留在项目文件库。')
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : '资料移除失败')
     } finally {
       setSaving(false)
     }
@@ -464,6 +513,57 @@ export default function ProductVersionEditorPage() {
               ))}
               <button className="secondary-button" disabled={readOnly} onClick={() => setQuality([...quality, { category: '待定义', requirement: '', priority: 'P1' }])}>＋ 添加标准</button>
             </EditorSection>
+          ) : null}
+
+          {activeTab === 'assets' ? (
+            <section className="definition-editor-section">
+              <div className="definition-editor-heading">
+                <div><h2>产品资料与设计文件</h2><p>上传产品图片、结构图、包装图和供应商资料，并关联到当前版本。移除关联不会删除项目文件库中的原文件。</p></div>
+              </div>
+              <div className="asset-upload-panel">
+                <label className="definition-field">资料类型
+                  <select value={assetRole} disabled={readOnly} onChange={(event) => setAssetRole(event.target.value)}>
+                    <option value="hero">产品整体效果图</option>
+                    <option value="configuration">配置全览图</option>
+                    <option value="detail">本体与细节图</option>
+                    <option value="experience">玩法与体验示意图</option>
+                    <option value="packaging">包装与内部结构图</option>
+                    <option value="compliance">合规与测试资料</option>
+                    <option value="supplier">供应商资料</option>
+                    <option value="reference">参考资料</option>
+                  </select>
+                </label>
+                <Field label="资料说明" value={assetCaption} onChange={setAssetCaption} placeholder="例如：方案 A 正面效果图" disabled={readOnly} />
+                <label className="asset-file-picker">
+                  <span>{saving ? '正在上传…' : '选择文件并上传'}</span>
+                  <input type="file" disabled={saving || readOnly} onChange={(event) => {
+                    const file = event.target.files?.[0]
+                    void handleAssetUpload(file)
+                    event.currentTarget.value = ''
+                  }} />
+                </label>
+              </div>
+              {assets.length === 0 ? (
+                <div className="workspace-empty"><strong>当前版本还没有关联资料</strong><p>可上传效果图、配置图、结构图、包装图或验证文件。</p></div>
+              ) : (
+                <div className="product-asset-list">
+                  {assets.map((asset) => {
+                    const file = projectFiles.find((item) => item.id === asset.file_id)
+                    return (
+                      <article className="product-asset-row" key={asset.id}>
+                        <span className="asset-file-icon">FILE</span>
+                        <div className="product-asset-copy">
+                          <strong>{file?.original_name || asset.file_id}</strong>
+                          <small>{asset.asset_role} · {asset.caption || '无备注'}{file ? ' · ' + Math.ceil(file.size_bytes / 1024) + ' KB' : ''}</small>
+                        </div>
+                        <a className="text-button" href={'/api/files/' + asset.file_id + '/download'} target="_blank" rel="noreferrer">下载</a>
+                        <button className="text-button danger-text" disabled={saving || readOnly} onClick={() => void handleAssetRemove(asset.id)}>移除</button>
+                      </article>
+                    )
+                  })}
+                </div>
+              )}
+            </section>
           ) : null}
 
           {activeTab === 'risks' ? (
