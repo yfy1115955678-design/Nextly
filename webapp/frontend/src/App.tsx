@@ -7,6 +7,10 @@ import OpportunityPage from './pages/OpportunityPage'
 import OverviewPage from './pages/OverviewPage'
 import ProductPage from './pages/ProductPage'
 import ProjectsPage from './pages/ProjectsPage'
+import ProjectProductPage from './pages/ProjectProductPage'
+import ConceptPage from './pages/ConceptPage'
+import VariantPage from './pages/VariantPage'
+import ProductVersionEditorPage from './pages/ProductVersionEditorPage'
 import ResearchPage from './pages/ResearchPage'
 import ReviewPage from './pages/ReviewPage'
 import TracePage from './pages/TracePage'
@@ -18,6 +22,10 @@ export default function App() {
         <Route element={<AppShell />}>
           <Route index element={<OverviewPage />} />
           <Route path="projects" element={<ProjectsPage />} />
+          <Route path="projects/:projectId/product-definition" element={<ProjectProductPage />} />
+          <Route path="concepts/:conceptId" element={<ConceptPage />} />
+          <Route path="variants/:variantId" element={<VariantPage />} />
+          <Route path="versions/:versionId" element={<ProductVersionEditorPage />} />
           <Route path="settings/backups" element={<BackupsPage />} />
           <Route path="opportunity" element={<OpportunityPage />} />
           <Route path="research" element={<ResearchPage />} />
