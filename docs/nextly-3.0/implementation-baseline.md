@@ -1,6 +1,6 @@
 # Nextly 3.0 · Local-first Architecture & Delivery Baseline
 
-**Status:** M0 backend scaffold and CI smoke tests passed; local Windows verification and backup/restore remain pending  
+**Status:** M0 Project CRUD, file storage and backup/restore passed CI; M1 product-definition vertical slice passed CI; local Windows acceptance pending  
 **Base branch:** nextly-workflow-refresh  
 **Working branch:** nextly-3.0-local-first  
 **Architecture decision:** Local-first, single-user, local API + SQLite + local file storage
@@ -106,15 +106,13 @@ GitHub Actions run for commit ccfa4a571921d5d2098e5c6afb1be2c087fc94dd completed
 
 Run: https://github.com/yfy1115955678-design/Nextly/actions/runs/45932425018
 
-### Remaining M0 work
+### Remaining M0 acceptance
 
 - Run the setup on the user's Windows machine and verify the local data directory.
-- Implement SQLite online backup plus coordinated storage backup and restore.
-- Add frontend Project CRUD and replace the hard-coded project switcher.
-- Add an explicit file-size limit test and backup/restore integration tests.
-- Keep the 2.0 demo workflow available until the 3.0 product-definition flow replaces it.
+- Verify backup creation, download and restore on Windows with the API fully stopped before restore.
+- Confirm that the existing 2.0 demo workflow remains available while the 3.0 product-definition flow is evaluated.
 
-M0 is not considered fully accepted until local Windows verification, backup/restore and frontend Project CRUD are complete.
+M0 code and CI coverage are complete. M0 is not considered locally accepted until Windows verification is complete.
 
 ## 5. M1 scope: product-definition vertical slice
 
@@ -204,3 +202,24 @@ npm run test:backend
 ~~~
 
 The API binds to 127.0.0.1:8000. Vite serves the UI on 127.0.0.1:5173 and proxies /api requests to the API.
+
+
+## Current delivery update · 2026-11-27
+
+### M0 delivery
+
+- Frontend Project CRUD is connected to the local API.
+- The Project workspace links into the product-definition workspace.
+- Database and local project files are backed up together.
+- Restore preparation validates the archive and produces a separate restore command; the restore command creates a safety backup before replacing local data.
+- Backend and frontend CI checks pass.
+
+### M1 delivery
+
+The versioned Product Definition vertical slice is implemented. It includes Concept / Variant / Version, structured product-definition sections, file-to-Version associations, immutable confirmed snapshots, Draft cloning, version comparison and workbook export.
+
+See [m1-product-definition.md](./m1-product-definition.md) for the current domain model, API contract, lifecycle and acceptance scope.
+
+Latest CI run: https://github.com/yfy1115955678-design/Nextly/actions/runs/45947537304
+
+The remaining acceptance step is local Windows verification. No production deployment or merge to the default branch has been performed.
