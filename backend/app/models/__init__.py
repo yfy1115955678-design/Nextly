@@ -1,5 +1,46 @@
 from app.models.app_setting import AppSetting
 from app.models.file_asset import FileAsset
+from app.models.product import (
+    BomItem,
+    BomItemQuote,
+    Decision,
+    DecisionVersionLink,
+    DevelopmentIssue,
+    ExperienceFlow,
+    ExperienceStep,
+    ExperienceStepBomLink,
+    ProductAsset,
+    ProductConcept,
+    ProductDefinition,
+    ProductPersona,
+    ProductRequirement,
+    ProductRisk,
+    ProductVariant,
+    QualityStandard,
+    VariantVersion,
+)
 from app.models.project import Project, ProjectModuleState
 
-__all__ = ["AppSetting", "FileAsset", "Project", "ProjectModuleState"]
+__all__ = [
+    "AppSetting",
+    "FileAsset",
+    "Project",
+    "ProjectModuleState",
+    "ProductConcept",
+    "ProductVariant",
+    "VariantVersion",
+    "ProductDefinition",
+    "ProductPersona",
+    "ProductRequirement",
+    "DevelopmentIssue",
+    "ExperienceFlow",
+    "ExperienceStep",
+    "ExperienceStepBomLink",
+    "BomItem",
+    "BomItemQuote",
+    "QualityStandard",
+    "ProductRisk",
+    "Decision",
+    "DecisionVersionLink",
+    "ProductAsset",
+]
