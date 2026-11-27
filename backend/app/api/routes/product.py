@@ -1,4 +1,8 @@
+from io import BytesIO
+from urllib.parse import quote
+
 from fastapi import APIRouter, Depends, status
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -21,6 +25,7 @@ from app.schemas.product import (
     VersionRead,
 )
 from app.services import product_service
+from app.services.product_export_service import export_product_definition
 
 router = APIRouter(tags=["product-definition"])
 
@@ -130,6 +135,17 @@ def confirm_version(version_id: str, payload: ConfirmVersionInput, db: Session =
 @router.get("/versions/{version_id}/diff")
 def get_version_diff(version_id: str, db: Session = Depends(get_db)):
     return product_service.get_version_diff(db, version_id)
+
+
+@router.get("/versions/{version_id}/export")
+def export_version(version_id: str, db: Session = Depends(get_db)):
+    content, filename = export_product_definition(db, version_id)
+    encoded_filename = quote(filename)
+    return StreamingResponse(
+        BytesIO(content),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"},
+    )
 
 
 @router.get("/projects/{project_id}/state")
