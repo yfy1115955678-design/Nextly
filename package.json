@@ -10,6 +10,7 @@
     "dev:backend": "python -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 --reload",
     "db:upgrade": "python -m alembic -c backend/alembic.ini upgrade head",
     "db:current": "python -m alembic -c backend/alembic.ini current",
+    "test:backend": "python -m pytest backend/tests",
     "preview": "npm --prefix webapp/frontend run preview"
   }
 }
