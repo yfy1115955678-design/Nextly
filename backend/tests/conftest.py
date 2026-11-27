@@ -48,9 +48,12 @@ def isolated_local_data(monkeypatch):
     monkeypatch.setattr(main_module, "engine", test_engine)
     db_session.SessionLocal.configure(bind=test_engine)
 
-    command.upgrade(alembic_config, "head")
-
     with test_engine.connect() as connection:
+        alembic_config.attributes["connection"] = connection
+        try:
+            command.upgrade(alembic_config, "head")
+        finally:
+            alembic_config.attributes.pop("connection", None)
         tables = set(inspect(connection).get_table_names())
     assert "product_concepts" in tables
     assert "variant_versions" in tables
