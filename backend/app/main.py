@@ -26,6 +26,7 @@ app = FastAPI(
     title="Nextly Local API",
     version=settings.app_version,
     description="Local-first API for Nextly 3.0.",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -39,7 +40,6 @@ app.add_middleware(
     allow_credentials=False,
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type"],
-    lifespan=lifespan,
 )
 
 app.include_router(api_router, prefix="/api")
