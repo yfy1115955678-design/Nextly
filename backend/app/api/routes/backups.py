@@ -1,9 +1,6 @@
-from pathlib import Path
-
 from fastapi import APIRouter, HTTPException, status
 from fastapi.responses import FileResponse
 
-from app.core.config import settings
 from app.schemas.backup import BackupRead, RestorePrepareRead
 from app.services.backup_service import (
     BackupError,
