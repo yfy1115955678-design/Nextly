@@ -53,10 +53,10 @@ Nextly 是一个用于作品集展示的前端功能原型，演示 AI、人工�
 
 ## 本地运行 2.0 Demo
 
-\`\`\`bash
+~~~bash
 npm --prefix webapp/frontend install
 npm --prefix webapp/frontend run dev
-\`\`\`
+~~~
 
 ## Nextly 3.0 · Local-first 开发中
 
@@ -75,35 +75,35 @@ npm --prefix webapp/frontend run dev
 
 建议使用 Python 3.11 或更高版本。
 
-\`\`\`bash
+~~~bash
 python -m venv .venv
 # Windows PowerShell
-.venv\\Scripts\\Activate.ps1
+.venv\Scripts\Activate.ps1
 # macOS / Linux
 source .venv/bin/activate
 python -m pip install -e ./backend
-\`\`\`
+~~~
 
 ### 初始化数据库
 
-\`\`\`bash
+~~~bash
 npm run db:upgrade
-\`\`\`
+~~~
 
 ### 启动服务
 
 终端 A：
 
-\`\`\`bash
+~~~bash
 npm run dev:backend
-\`\`\`
+~~~
 
 终端 B：
 
-\`\`\`bash
+~~~bash
 npm --prefix webapp/frontend install
 npm run dev
-\`\`\`
+~~~
 
 后端健康检查：http://127.0.0.1:8000/api/health
 
