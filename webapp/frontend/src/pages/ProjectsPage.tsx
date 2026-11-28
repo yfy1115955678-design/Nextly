@@ -22,6 +22,7 @@ function formatDate(value: string) {
 
 export default function ProjectsPage() {
   const navigate = useNavigate()
+  const [creating, setCreating] = useState(false)
   const [projects, setProjects] = useState<ProjectRecord[]>([])
   const [form, setForm] = useState<ProjectInput>(emptyForm)
   const [editForm, setEditForm] = useState<ProjectInput>(emptyForm)
@@ -55,15 +56,14 @@ export default function ProjectsPage() {
     setError('')
     setNotice('')
     try {
-      await createProject({
+      const project = await createProject({
         name: form.name.trim(),
         category: form.category?.trim() || undefined,
         target_market: form.target_market?.trim() || undefined,
         description: form.description?.trim() || '',
       })
       setForm(emptyForm)
-      setNotice('项目已创建并保存到本地数据库。')
-      await refresh()
+      navigate('/projects/' + project.id + '/product-definition')
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : '项目创建失败')
     } finally {
@@ -137,16 +137,15 @@ export default function ProjectsPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        step="NEXTLY 3.0 · WORKSPACE"
-        title="项目管理"
-        description="管理本地项目，并从项目进入产品概念、方案对比与版本化产品定义工作区。"
-        actions={<StatusBadge tone="success">本地数据库</StatusBadge>}
+        step=""
+        title="项目库"
+        actions={<button className="primary-button" onClick={() => setCreating(true)}>＋ 新建项目</button>}
       />
 
       {error ? <div className="workspace-alert error" role="alert">{error}</div> : null}
       {notice ? <div className="workspace-alert success" role="status">{notice}</div> : null}
 
-      <div className="workspace-grid">
+      <div className={creating ? "workspace-grid" : "local-project-list"}>
         <section className="panel-card">
           <div className="section-title">
             <h2>项目列表</h2>
@@ -164,7 +163,7 @@ export default function ProjectsPage() {
           {!loading && projects.length === 0 ? (
             <div className="workspace-empty">
               <strong>还没有项目记录</strong>
-              <p>从右侧创建第一个项目，数据会保存到本机 SQLite。</p>
+              <p>点击「新建项目」开始。</p>
             </div>
           ) : null}
 
@@ -201,7 +200,7 @@ export default function ProjectsPage() {
                       <div className="project-actions">
                         {project.status !== 'archived' ? (
                           <>
-                            <button className="text-button" onClick={() => navigate('/projects/' + project.id + '/product-definition')}>产品定义</button>
+                            <button className="text-button" onClick={() => navigate('/projects/' + project.id + '/product-definition')}>打开项目 →</button>
                             <button className="text-button" disabled={saving} onClick={() => beginEdit(project)}>编辑</button>
                             <button className="text-button" disabled={saving} onClick={() => void toggleStatus(project)}>{project.status === 'paused' ? '恢复' : '暂停'}</button>
                             <button className="text-button danger-text" disabled={saving} onClick={() => void handleArchive(project)}>归档</button>
@@ -216,17 +215,17 @@ export default function ProjectsPage() {
           </div>
         </section>
 
-        <section className="panel-card create-project-card">
-          <div className="section-title"><h2>新建项目</h2><StatusBadge tone="info">Project</StatusBadge></div>
+        {creating && <section className="panel-card create-project-card">
+          <div className="section-title"><h2>新建项目</h2><button className="text-button" onClick={() => setCreating(false)}>取消</button></div>
           <form className="project-create-form" onSubmit={(event) => void submitNewProject(event)}>
-            <label>项目名称 <span>必填</span><input autoFocus value={form.name} maxLength={160} placeholder="例如：AquaPure S1" onChange={(event) => setForm({ ...form, name: event.target.value })} required /></label>
-            <label>产品品类<input value={form.category} maxLength={120} placeholder="例如：宠物饮水机" onChange={(event) => setForm({ ...form, category: event.target.value })} /></label>
+            <label>项目名称 <span>必填</span><input autoFocus value={form.name} maxLength={160} placeholder="例如：2027 新品开发" onChange={(event) => setForm({ ...form, name: event.target.value })} required /></label>
+            <label>产品品类<input value={form.category} maxLength={120} placeholder="产品所属品类" onChange={(event) => setForm({ ...form, category: event.target.value })} /></label>
             <label>目标市场<input value={form.target_market} maxLength={120} placeholder="例如：US Amazon" onChange={(event) => setForm({ ...form, target_market: event.target.value })} /></label>
             <label>项目描述<textarea rows={4} maxLength={10000} value={form.description} placeholder="记录项目目标、背景或当前阶段。" onChange={(event) => setForm({ ...form, description: event.target.value })} /></label>
             <button className="primary-button" type="submit" disabled={saving || !form.name.trim()}>{saving ? '保存中…' : '创建项目'}</button>
           </form>
           <p className="form-footnote">创建后可继续编辑、暂停或归档。归档不会删除项目数据。</p>
-        </section>
+        </section>}
       </div>
     </div>
   )
