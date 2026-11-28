@@ -347,13 +347,13 @@ export default function ProductVersionEditorPage() {
   const currentConcept = workspace?.concepts.find(c => c.concept.id === detail?.concept.id)
   const currentVariant = currentConcept?.variants.find(v => v.variant.id === detail?.variant.id)
   const createDraft = async (variantId: string) => {
-    const change = window.prompt('新版本修改说明', '基于上一版本修订')
+    const change = window.prompt('基于该方案的最新版本创建修订草稿，请填写修改说明。', '基于最新版本修订')
     if (change === null) return
     setSaving(true); setError('')
     try {
       const next = await createVersion(variantId, change)
       setSaving(false)
-      window.location.assign(versionPath(projectId, next.id))
+      window.setTimeout(() => window.location.assign(versionPath(projectId, next.id)), 0)
     } catch (e) { setError(e instanceof Error ? e.message : '新版本创建失败'); setSaving(false) }
   }
   if (!loading && !detail) return <div className="page-stack"><div role="alert" className="workspace-alert error">{error || '版本不存在'}</div><a href={'/projects/' + projectId + '/product-definition'}>返回产品矩阵</a></div>
@@ -519,7 +519,7 @@ export default function ProductVersionEditorPage() {
                         <Field label="感官反馈" multiline value={step.sensory_feedback} onChange={(value) => setFlows(patchList(flows, flowIndex, { steps: patchList(flow.steps, stepIndex, { sensory_feedback: value }) }))} />
                         <Field label="验收标准" multiline value={step.acceptance_criteria} onChange={(value) => setFlows(patchList(flows, flowIndex, { steps: patchList(flow.steps, stepIndex, { acceptance_criteria: value }) }))} />
                       </div>
-                      <Field label="关联 BOM 编码（多个用英文逗号分隔）" value={step.bom_item_codes.join(', ')} onChange={(value) => setFlows(patchList(flows, flowIndex, { steps: patchList(flow.steps, stepIndex, { bom_item_codes: value.split(',').map((part) => part.trim()).filter(Boolean) }) }))} placeholder="例如：TANK, LID" />
+                      {editing ? <div className="definition-field"><span>关联 BOM 物料</span><div className="local-bom-choices">{bom.map(item => <label key={item.item_code}><input type="checkbox" checked={step.bom_item_codes.includes(item.item_code)} onChange={e => setFlows(patchList(flows, flowIndex, { steps: patchList(flow.steps, stepIndex, { bom_item_codes: e.target.checked ? [...step.bom_item_codes, item.item_code] : step.bom_item_codes.filter(code => code !== item.item_code) }) }))}/>{item.item_code} · {item.name}</label>)}{!bom.length && <span>请先保存 BOM 物料。</span>}</div></div> : <div className="definition-field local-read-field"><span>关联 BOM 物料</span><div>{step.bom_item_codes.map(code => bom.find(item => item.item_code === code)?.name || code).join('、') || '—'}</div></div>}
                     </div>
                   ))}
                   <button className="text-button" disabled={readOnly} onClick={() => setFlows(patchList(flows, flowIndex, { steps: [...flow.steps, { sequence_no: flow.steps.length + 1, title: '新步骤', bom_item_codes: [] }] }))}>＋ 添加步骤</button>
