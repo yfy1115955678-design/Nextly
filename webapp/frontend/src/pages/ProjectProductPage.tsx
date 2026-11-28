@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { StatusBadge } from '../components/PagePrimitives'
 import { createConcept, createVariant, createVersion, currentVersion, getProjectWorkspace, getVersion, versionPath, type ProjectWorkspaceState, type ProductVersionDetail, type VariantVersion } from '../lib/productApi'
 
@@ -19,7 +19,6 @@ function price(d?: ProductVersionDetail) {
 
 export default function ProjectProductPage() {
   const { projectId = '' } = useParams()
-  const navigate = useNavigate()
   const [state, setState] = useState<ProjectWorkspaceState | null>(null)
   const [details, setDetails] = useState<Record<string, ProductVersionDetail>>({})
   const [creation, setCreation] = useState<Creation | null>(null)
@@ -53,9 +52,9 @@ export default function ProjectProductPage() {
     finally { setSaving(false) }
   }
   const open = async (variantId: string, version?: VariantVersion) => {
-    if (version) { navigate(versionPath(projectId, version.id)); return }
+    if (version) { window.location.assign(versionPath(projectId, version.id)); return }
     setSaving(true); setError('')
-    try { const draft = await createVersion(variantId, '初版产品定义'); navigate(versionPath(projectId, draft.id)) }
+    try { const draft = await createVersion(variantId, '初版产品定义'); window.location.assign(versionPath(projectId, draft.id)) }
     catch (e) { setError(e instanceof Error ? e.message : '创建初稿失败') }
     finally { setSaving(false) }
   }
