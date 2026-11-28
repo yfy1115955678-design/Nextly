@@ -13,7 +13,7 @@ const navItems: Array<{ to: string; label: string; icon: SymbolName; question: s
 ]
 
 const pageLabels: Record<string, string> = {
-  '/': '项目总览',
+  '/demo': '项目总览',
   '/projects': '项目管理',
   '/settings/backups': '数据与备份',
   '/opportunity': '机会发现',
@@ -63,7 +63,7 @@ export default function AppShell() {
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <NavLink to="/" className="brand" aria-label="返回 Nextly 项目总览">
+        <NavLink to="/demo" className="brand" aria-label="返回 Nextly 项目总览">
           <span className="brand-mark">N</span>
           <span><strong>Nextly</strong><small>产品开发工作台</small></span>
         </NavLink>
@@ -83,8 +83,8 @@ export default function AppShell() {
             <Symbol name="history" /><span>数据与备份</span>
           </NavLink>
 
-          <span className="nav-group-label">演示流程 · AquaPure S1</span>
-          <NavLink to="/" end className={({ isActive }) => 'side-link ' + (isActive ? 'active' : '')}>
+          <span className="nav-group-label">独立演示 · AquaPure S1</span>
+          <NavLink to="/demo" end className={({ isActive }) => 'side-link ' + (isActive ? 'active' : '')}>
             <Symbol name="overview" /><span>项目总览</span>
           </NavLink>
 
@@ -120,13 +120,13 @@ export default function AppShell() {
             className="reset-button"
             onClick={() => {
               resetDemo()
-              navigate('/')
+              navigate('/demo')
               setMoreOpen(false)
             }}
           >
             <Symbol name="reset" />重置演示
           </button>
-          <span>Nextly 3.0 · Local-first + 2.0 Demo</span>
+          <span>Nextly 2.0 · 独立演示</span>
         </div>
       </aside>
 
