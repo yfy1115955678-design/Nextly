@@ -351,3 +351,22 @@ export function removeProductAsset(versionId: string, assetId: string) {
     method: 'DELETE',
   })
 }
+
+
+export interface ProjectWorkspaceState {
+  project: { id: string; name: string; category: string | null; target_market: string | null; description: string; status: string }
+  concepts: Array<{ concept: ProductConcept; variants: Array<{ variant: ProductVariant; versions: VariantVersion[] }> }>
+  recent_decisions: ProductVersionDetail['decisions']
+}
+
+export function getProjectWorkspace(projectId: string) {
+  return productRequest<ProjectWorkspaceState>('/projects/' + projectId + '/state')
+}
+
+export function currentVersion(versions: VariantVersion[]) {
+  return versions.find(v => v.status === 'draft') || versions.find(v => v.status === 'confirmed') || versions[0]
+}
+
+export function versionPath(projectId: string, versionId: string) {
+  return '/projects/' + projectId + '/product-definition/' + versionId
+}
