@@ -1,11 +1,16 @@
-import { useCallback, useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import { PageHeader, StatusBadge } from '../components/PagePrimitives'
 import { listProjectFiles, uploadProjectFile, type ProjectFileRecord } from '../lib/api'
 import {
   addProductAsset,
   removeProductAsset,
   confirmVersion,
+  createVersion,
+  currentVersion,
+  getProjectWorkspace,
+  versionPath,
+  type ProjectWorkspaceState,
   getVersion,
   getVersionDiff,
   saveBom,
@@ -48,7 +53,7 @@ const emptyDefinition: ProductDefinition = {
   category: '',
   product_type: '',
   priority: 'P1',
-  planned_launch_date: '',
+  planned_launch_date: null,
   positioning: '',
   market_entry: '',
   target_price_min: null,
@@ -60,6 +65,8 @@ const emptyDefinition: ProductDefinition = {
   warranty_policy: '',
   summary: '',
 }
+
+const EditorMode = createContext({ editing: false, locked: true, reading: false, begin: () => {}, cancel: () => {} })
 
 function Field({
   label,
@@ -78,6 +85,8 @@ function Field({
   type?: string
   disabled?: boolean
 }) {
+  const { reading } = useContext(EditorMode)
+  if (reading) return <div className="definition-field local-read-field"><span>{label}</span><div>{value == null || value === '' ? '—' : value}</div></div>
   return (
     <label className="definition-field">
       <span>{label}</span>
@@ -103,6 +112,8 @@ function SelectField({
   onChange: (value: string) => void
   disabled?: boolean
 }) {
+  const { reading } = useContext(EditorMode)
+  if (reading) return <div className="definition-field local-read-field"><span>{label}</span><div>{options.find(o => o.value === value)?.label || value || '—'}</div></div>
   return (
     <label className="definition-field">
       <span>{label}</span>
@@ -128,13 +139,14 @@ function EditorSection({
   saving: boolean
   readOnly: boolean
 }) {
+  const mode = useContext(EditorMode)
   return (
     <section className="definition-editor-section">
       <div className="definition-editor-heading">
         <div><h2>{title}</h2><p>{description}</p></div>
-        <button className="primary-button" disabled={saving || readOnly} onClick={onSave}>{saving ? '保存中…' : '保存本节'}</button>
+        {!mode.locked && <div className="project-actions">{mode.editing ? <><button className="secondary-button" disabled={saving} onClick={mode.cancel}>取消</button><button className="primary-button" disabled={saving || readOnly} onClick={onSave}>{saving ? '保存中…' : '保存本节'}</button></> : <button className="secondary-button" disabled={saving} onClick={mode.begin}>编辑本节</button>}</div>}
       </div>
-      <fieldset disabled={readOnly} className="definition-fieldset">{children}</fieldset>
+      <fieldset disabled={readOnly || saving} className={'definition-fieldset' + (mode.reading ? ' local-readonly' : '')}>{children}</fieldset>
     </section>
   )
 }
@@ -156,8 +168,9 @@ function statusLabel(status: ProductVersionDetail['version']['status']) {
 }
 
 export default function ProductVersionEditorPage() {
-  const { versionId = '' } = useParams()
-  const navigate = useNavigate()
+  const { projectId = '', versionId = '' } = useParams()
+  const [workspace, setWorkspace] = useState<ProjectWorkspaceState | null>(null)
+  const [editing, setEditing] = useState(false)
   const [detail, setDetail] = useState<ProductVersionDetail | null>(null)
   const [definition, setDefinition] = useState<ProductDefinition>(emptyDefinition)
   const [personas, setPersonas] = useState<ProductPersona[]>([])
@@ -178,14 +191,23 @@ export default function ProductVersionEditorPage() {
   const [notice, setNotice] = useState('')
   const [diff, setDiff] = useState<string | null>(null)
 
-  const readOnly = detail?.version.status !== 'draft'
+  const locked = detail?.version.status !== 'draft'
+  const readOnly = locked || (!editing && activeTab !== 'assets')
+  useEffect(() => {
+    if (!editing && !saving) return
+    const warn = (event: BeforeUnloadEvent) => { event.preventDefault(); event.returnValue = '' }
+    window.addEventListener('beforeunload', warn)
+    return () => window.removeEventListener('beforeunload', warn)
+  }, [editing, saving])
 
   const refresh = useCallback(async () => {
     if (!versionId) return
     setLoading(true)
     try {
       const result = await getVersion(versionId)
-      const files = await listProjectFiles(result.project.id)
+      if (result.project.id !== projectId) throw new Error('此版本不属于当前项目。')
+      const [files, scope] = await Promise.all([listProjectFiles(projectId), getProjectWorkspace(projectId)])
+      setWorkspace(scope)
       setDetail(result)
       setProjectFiles(files)
       setAssets(result.assets)
@@ -213,7 +235,7 @@ export default function ProductVersionEditorPage() {
     } finally {
       setLoading(false)
     }
-  }, [versionId])
+  }, [projectId, versionId])
 
   useEffect(() => {
     void refresh()
@@ -225,6 +247,8 @@ export default function ProductVersionEditorPage() {
     setNotice('')
     try {
       await action()
+      setEditing(false)
+      await refresh()
       setNotice(label + '已保存。')
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : label + '保存失败')
@@ -272,15 +296,17 @@ export default function ProductVersionEditorPage() {
   }
 
   const handleConfirm = async () => {
-    if (!window.confirm('确认当前产品定义版本？确认后此版本将锁定为历史快照，后续修改需要创建新版本。')) return
+    if (editing) return
+    const rationale = window.prompt('确认当前定义快照。请输入确认依据或仍待验证的事项（不代表批准量产）。', '')
+    if (rationale === null) return
     setSaving(true)
     setError('')
     setNotice('')
     try {
       await confirmVersion(versionId, {
-        decision_type: 'approve',
-        outcome: '确认产品定义 v' + detail?.version.version_number,
-        rationale: '产品定义内容已完成当前阶段整理。',
+        decision_type: 'continue',
+        outcome: '确认产品定义快照 v' + detail?.version.version_number,
+        rationale: rationale.trim(),
       })
       setNotice('版本已确认，历史快照已保存。')
       await refresh()
@@ -301,6 +327,37 @@ export default function ProductVersionEditorPage() {
     }
   }
 
+  const cancelEdit = () => {
+    if (!window.confirm('放弃本节尚未保存的修改？')) return
+    setEditing(false)
+    void refresh()
+  }
+  const selectTab = (tab: TabKey) => {
+    if (tab === activeTab || saving) return
+    if (editing) {
+      if (!window.confirm('本节正在编辑。放弃尚未保存的修改并切换？')) return
+      setEditing(false)
+      void refresh()
+    }
+    setActiveTab(tab)
+  }
+  const openVersion = (id: string) => {
+    if (id !== versionId) window.location.assign(versionPath(projectId, id))
+  }
+  const currentConcept = workspace?.concepts.find(c => c.concept.id === detail?.concept.id)
+  const currentVariant = currentConcept?.variants.find(v => v.variant.id === detail?.variant.id)
+  const createDraft = async (variantId: string) => {
+    const change = window.prompt('新版本修改说明', '基于上一版本修订')
+    if (change === null) return
+    setSaving(true); setError('')
+    try {
+      const next = await createVersion(variantId, change)
+      setSaving(false)
+      window.location.assign(versionPath(projectId, next.id))
+    } catch (e) { setError(e instanceof Error ? e.message : '新版本创建失败'); setSaving(false) }
+  }
+  if (!loading && !detail) return <div className="page-stack"><div role="alert" className="workspace-alert error">{error || '版本不存在'}</div><a href={'/projects/' + projectId + '/product-definition'}>返回产品矩阵</a></div>
+
   if (loading && !detail) {
     return <div className="page-stack"><div className="workspace-empty">正在读取产品定义…</div></div>
   }
@@ -308,33 +365,50 @@ export default function ProductVersionEditorPage() {
   return (
     <div className="page-stack">
       <PageHeader
-        step="PRODUCT DEFINITION · VERSION"
-        title={definition.product_name || detail?.variant.name || '产品定义'}
-        description={[detail?.concept.name, detail?.variant.name, 'v' + detail?.version.version_number].filter(Boolean).join(' / ')}
+        step="产品定义"
+        title={detail?.concept.name || '产品定义'}
+        description={[detail?.variant.name, 'v' + detail?.version.version_number].filter(Boolean).join(' / ')}
         actions={
           <>
             <StatusBadge tone={detail?.version.status === 'draft' ? 'warning' : detail?.version.status === 'confirmed' ? 'success' : 'neutral'}>{detail ? statusLabel(detail.version.status) : '读取中'}</StatusBadge>
-            <a className="secondary-button" href={'/api/versions/' + versionId + '/export'}>导出 Excel</a>
-            <button className="secondary-button" onClick={() => navigate('/variants/' + detail?.variant.id)}>版本历史</button>
+            {editing || saving ? <button className="secondary-button" disabled>导出 Excel</button> : <a className="secondary-button" href={'/api/versions/' + versionId + '/export'}>导出 Excel</a>}
+            {locked && currentVariant && !currentVariant.versions.some(v => v.status === 'draft') && <button className="primary-button" disabled={saving} onClick={() => void createDraft(currentVariant.variant.id)}>创建修订版</button>}
             {detail?.version.based_on_version_id ? <button className="secondary-button" onClick={() => void handleDiff()}>查看版本差异</button> : null}
-            {detail?.version.status === 'draft' ? <button className="primary-button" disabled={saving} onClick={() => void handleConfirm()}>确认版本</button> : null}
+            {detail?.version.status === 'draft' ? <button className="primary-button" disabled={saving || editing} onClick={() => void handleConfirm()}>确认定义</button> : null}
           </>
         }
       />
 
       {error ? <div className="workspace-alert error" role="alert">{error}</div> : null}
       {notice ? <div className="workspace-alert success" role="status">{notice}</div> : null}
-      {readOnly ? <div className="read-only-notice">当前版本已锁定。需要修改时，请返回版本历史并创建新的 Draft。</div> : null}
+      {locked && <div className="read-only-notice">历史快照，只读。可切换到草稿或创建修订版。</div>}
+      {detail && workspace && <div className="local-version-bar">
+        <label>产品<select value={detail.concept.id} disabled={saving} onChange={e => {
+          const selected = workspace.concepts.find(c => c.concept.id === e.target.value)
+          const v = selected?.variants.map(x => currentVersion(x.versions)).find(Boolean)
+          if (v) openVersion(v.id)
+          else window.location.assign('/projects/' + projectId + '/product-definition')
+        }}>{workspace.concepts.map(c => <option key={c.concept.id} value={c.concept.id}>{c.concept.name}</option>)}</select></label>
+        <label>方案<select value={detail.variant.id} disabled={saving} onChange={e => {
+          const v = currentVersion(currentConcept?.variants.find(x => x.variant.id === e.target.value)?.versions || [])
+          if (v) openVersion(v.id)
+          else window.location.assign('/projects/' + projectId + '/product-definition')
+        }}>{currentConcept?.variants.map(v => <option key={v.variant.id} value={v.variant.id}>{v.variant.name}</option>)}</select></label>
+        <label>版本<select value={versionId} disabled={saving} onChange={e => openVersion(e.target.value)}>{currentVariant?.versions.map(v => <option key={v.id} value={v.id}>v{v.version_number} · {statusLabel(v.status)}</option>)}</select></label>
+        <a className="secondary-button" href={'/projects/' + projectId + '/product-definition'}>方案对比</a>
+      </div>}
+      {editing && <p className="local-edit-notice">正在编辑本节。保存或取消后可确认版本。</p>}
       {diff ? <section className="panel-card version-diff-panel"><div className="section-title"><h2>版本差异</h2><button className="text-button" onClick={() => setDiff(null)}>收起</button></div><pre>{diff}</pre></section> : null}
 
+      <EditorMode.Provider value={{ editing, locked, reading: !editing && activeTab !== 'assets', begin: () => setEditing(true), cancel: cancelEdit }}>
       <div className="definition-workspace">
         <nav className="definition-tabs" aria-label="产品定义章节">
-          {tabs.map((tab) => <button key={tab.key} className={activeTab === tab.key ? 'active' : ''} onClick={() => setActiveTab(tab.key)}>{tab.label}</button>)}
+          {tabs.map((tab) => <button key={tab.key} className={activeTab === tab.key ? 'active' : ''} disabled={saving} onClick={() => selectTab(tab.key)}>{tab.label}</button>)}
         </nav>
 
         <div className="definition-editor-content">
           {activeTab === 'definition' ? (
-            <EditorSection title="产品基本信息与商业定位" description="先确定产品是什么、面向谁、以什么价格进入市场。" onSave={() => void saveSection(() => saveDefinition(versionId, definition), '基本信息')} saving={saving} readOnly={readOnly}>
+            <EditorSection title="产品基本信息与商业定位" description="先确定产品是什么、面向谁、以什么价格进入市场。" onSave={() => void saveSection(() => saveDefinition(versionId, {...definition, planned_launch_date: definition.planned_launch_date || null}), '基本信息')} saving={saving} readOnly={readOnly}>
               <div className="definition-form-grid">
                 <Field label="产品名称" value={definition.product_name} onChange={(value) => setDefinition({ ...definition, product_name: value })} placeholder="产品名称" />
                 <Field label="SKU" value={definition.sku} onChange={(value) => setDefinition({ ...definition, sku: value })} placeholder="内部 SKU" />
@@ -589,6 +663,7 @@ export default function ProductVersionEditorPage() {
           ) : null}
         </div>
       </div>
+      </EditorMode.Provider>
     </div>
   )
 }
