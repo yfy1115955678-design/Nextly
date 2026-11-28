@@ -491,6 +491,20 @@ def replace_bom(db: Session, version_id: str, payloads) -> list:
             visited.add(current)
             current = parent_map.get(current)
 
+    # Preserve the user's experience-to-material relationships when the BOM is saved.
+    # The write API replaces rows; capture semantic keys before the cascade deletes links.
+    existing_links = db.execute(
+        select(ExperienceStepBomLink.step_id, BomItem.item_code)
+        .join(BomItem, BomItem.id == ExperienceStepBomLink.bom_item_id)
+        .where(ExperienceStepBomLink.version_id == version_id)
+    ).all()
+    removed_linked = sorted({code for _, code in existing_links if code not in code_set}, key=str)
+    if removed_linked:
+        raise HTTPException(
+            status_code=409,
+            detail="请先在体验流程中解除以下物料关联，再删除或更改物料编码：" + ", ".join(str(code) for code in removed_linked),
+        )
+
     db.execute(delete(BomItem).where(BomItem.version_id == version_id))
     items = []
     for payload in payloads:
@@ -525,6 +539,13 @@ def replace_bom(db: Session, version_id: str, payloads) -> list:
                 version_id=version_id,
                 **quote_values,
             ))
+
+    for step_id, code in existing_links:
+        db.add(ExperienceStepBomLink(
+            step_id=step_id,
+            bom_item_id=by_code[code].id,
+            version_id=version_id,
+        ))
 
     db.commit()
     return [item for item, _ in items]
