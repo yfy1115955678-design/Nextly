@@ -1049,3 +1049,7 @@
   .local-shell .topbar { padding: 0 12px; }
   .local-version-bar { grid-template-columns: 1fr; }
 }
+
+.local-bom-choices { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 8px; }
+.local-bom-choices label { display: flex; align-items: center; gap: 8px; font-weight: 400; }
+.local-bom-choices input[type="checkbox"] { width: auto; accent-color: var(--accent); }
