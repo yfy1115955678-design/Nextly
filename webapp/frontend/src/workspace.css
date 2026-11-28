@@ -978,3 +978,74 @@
     justify-self: start;
   }
 }
+
+/* Project-centric 3.0 workspace. Legacy demo styles remain isolated by shell. */
+.local-shell .page-frame { max-width: 1500px; padding: 30px 36px 64px; }
+.local-shell .page-stack { gap: 18px; }
+.local-shell .topbar { height: 60px; padding: 0 30px; }
+.local-shell .page-header h1, .local-page-title h1 { font-size: 30px; line-height: 1.25; margin: 0; letter-spacing: -0.025em; }
+.local-shell .page-step:empty { display: none; }
+.local-shell .breadcrumb a { color: var(--muted); text-decoration: none; }
+.local-shell .breadcrumb a:hover { color: var(--ink); }
+.local-storage-label { color: var(--muted); font-size: 12px; }
+.local-project-picker { display: grid; gap: 6px; padding: 12px 0 8px; }
+.local-project-picker > span { font-size: 11px; color: var(--muted); }
+.local-project-picker select, .local-version-bar select { min-width: 0; width: 100%; border: 1px solid var(--line-strong); border-radius: 7px; padding: 9px 10px; color: var(--ink); background: white; font: inherit; font-size: 13px; }
+.local-shell .sidebar-nav { padding-top: 12px; }
+.local-back { padding-left: 0; color: var(--muted); }
+.local-current { cursor: default; }
+.local-shell .sidebar-footer .side-link { font-size: 12px; font-weight: 400; padding-left: 0; }
+.local-page-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.local-page-title p { margin: 8px 0 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+.local-project-list { display: block; }
+.local-project-list .project-record { padding: 18px 0; }
+.local-create { max-width: 620px; }
+.local-create h2 { margin: 0; font-size: 16px; }
+.matrix-summary { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 0; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.matrix-summary > div { display: grid; gap: 8px; padding: 18px 22px; border-right: 1px solid var(--line); }
+.matrix-summary > div:last-child { border-right: 0; }
+.matrix-summary small { color: var(--muted); font-size: 12px; }
+.matrix-summary strong { font-size: 25px; font-variant-numeric: tabular-nums; }
+.matrix-group { padding: 18px 20px; }
+.matrix-group-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding-bottom: 14px; }
+.matrix-group-head h2 { margin: 0; font-size: 18px; }
+.matrix-group-head p { margin: 6px 0 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
+.matrix-table-wrap { overflow-x: auto; }
+.matrix-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; min-width: 650px; }
+.matrix-table th { background: var(--soft); color: var(--muted); font-weight: 550; font-size: 12px; }
+.matrix-table th, .matrix-table td { padding: 12px 10px; vertical-align: top; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; line-height: 1.5; }
+.matrix-table tbody tr:last-child td { border-bottom: 0; }
+.matrix-table td:first-child { width: 22%; }
+.matrix-table td:nth-child(2) { width: 30%; }
+.matrix-table td small { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+.matrix-table td:last-child, .matrix-table td:nth-child(3) { white-space: nowrap; }
+.matrix-table .text-button { padding: 0; min-height: 24px; color: var(--accent-dark); }
+.matrix-empty { color: var(--muted); font-size: 13px; }
+.local-version-bar { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)) auto; gap: 12px; align-items: end; background: white; border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+.local-version-bar label { display: grid; gap: 5px; color: var(--muted); font-size: 12px; min-width: 0; }
+.local-version-bar .secondary-button { text-decoration: none; }
+.local-edit-notice { margin: 0; font-size: 13px; color: var(--muted); }
+.local-shell .definition-tabs { top: 78px; }
+.local-shell .definition-tabs button { font-size: 13px; }
+.local-shell .definition-editor-heading p { font-size: 13px; }
+.local-shell .definition-field { font-size: 12px; }
+.local-shell .definition-field input, .local-shell .definition-field textarea, .local-shell .definition-field select { font-size: 13px; }
+.definition-fieldset.local-readonly:disabled { opacity: 1; }
+.local-readonly button { display: none; }
+.local-read-field > span { color: var(--muted); font-size: 12px; font-weight: 500; }
+.local-read-field > div { font-size: 14px; line-height: 1.65; font-weight: 400; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--ink); }
+.local-read-field { border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+.decision-record-local { border-bottom: 1px solid var(--line); padding: 16px 0; }
+.decision-record-local:last-child { border-bottom: 0; }
+.decision-record-local h3 { margin: 8px 0; }
+.decision-record-local small, .decision-record-local p { color: var(--muted); line-height: 1.6; }
+@media(max-width: 900px) {
+  .local-shell .page-frame { padding: 24px 18px; }
+  .local-version-bar, .matrix-summary { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .matrix-summary > div { border-bottom: 1px solid var(--line); }
+}
+@media(max-width: 620px) {
+  .local-page-title { flex-direction: column; }
+  .local-shell .topbar { padding: 0 12px; }
+  .local-version-bar { grid-template-columns: 1fr; }
+}
