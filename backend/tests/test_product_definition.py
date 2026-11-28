@@ -330,6 +330,27 @@ def test_product_definition_version_lifecycle_and_clone():
         )
         assert revised_requirements.status_code == 200
 
+        # Saving a BOM with the same semantic material keys must preserve experience links.
+        preserved = client.put(
+            f"/api/versions/{second_id}/bom",
+            json=[
+                {"item_code": "SET", "name": "Complete fountain", "quantity": 1, "unit": "set"},
+                {"item_code": "TANK", "parent_item_code": "SET", "name": "Revised tank", "quantity": 1, "unit": "pcs"},
+            ],
+        )
+        assert preserved.status_code == 200
+        linked = client.get(f"/api/versions/{second_id}").json()
+        assert linked["experience_flows"][0]["steps"][0]["bom_item_codes"] == ["TANK"]
+
+        blocked = client.put(
+            f"/api/versions/{second_id}/bom",
+            json=[{"item_code": "NEW-BASE", "name": "Updated base"}],
+        )
+        assert blocked.status_code == 409
+        still_linked = client.get(f"/api/versions/{second_id}").json()
+        assert still_linked["experience_flows"][0]["steps"][0]["bom_item_codes"] == ["TANK"]
+        assert client.put(f"/api/versions/{second_id}/experience-flows", json=[]).status_code == 200
+
         revised_bom = client.put(
             f"/api/versions/{second_id}/bom",
             json=[
